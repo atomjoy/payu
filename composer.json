@@ -1,0 +1,37 @@
+{
+	"name": "atomjoy/payu",
+	"description": "Laravel payu library",
+	"type": "library",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Atomjoy",
+			"email": "atomjoy.official@gmail.com"
+		}
+	],
+	"minimum-stability": "dev",
+	"require": {
+		"openpayu/openpayu": "2.3.*"
+	},
+	"autoload": {
+		"classmap": [
+			"src/"
+		],
+		"psr-4": {
+			"Payu\\": "src/",
+			"Database\\Factories\\": "database/factories/",
+			"Database\\Migrations\\": "database/migrations/",
+			"Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Payu\\PayuServiceProvider"
+			],
+			"aliases": {
+				"Payu": "Payu\\Facades\\Payu"
+			}
+		}
+	}
+}
