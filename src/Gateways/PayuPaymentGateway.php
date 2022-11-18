@@ -515,7 +515,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			throw new Exception("Minimal decimal value: 0.01", 422);
 		}
 
-		if (!preg_match('/^\d+\.\d{1,2}$/', $decimal)) {
+		if (!preg_match('/^\d+(\.\d{1,2})?$/', $decimal)) {
 			throw new Exception("Invalid decimal value", 422);
 		}
 
