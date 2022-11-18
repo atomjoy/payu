@@ -58,5 +58,5 @@ interface PayuGatewayInterface
 	function logo($square): string;
 
 	// Decimal to cents/grosz
-	function toCents($decimal): string;
+	function toCents(float $decimal): int;
 }
