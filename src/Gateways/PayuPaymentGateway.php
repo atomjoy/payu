@@ -519,7 +519,8 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			throw new Exception("Invalid decimal value", 422);
 		}
 
-		return number_format($decimal, 2, '.', '') * 100;
+		return ($decimal * 100);
+		// return number_format($decimal, 2, '.', '') * 100;
 	}
 
 	function log($code, $desc, $oid = 'NONE')
