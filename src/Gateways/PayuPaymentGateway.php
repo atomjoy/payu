@@ -96,7 +96,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		try {
 			// Client address
 			$client = $order->client;
-			$total = $this->toCents($order->cost);
+			$total = $this->toCents((float) $order->cost);
 			$desc = 'ID-' . $order->uid;
 			// Credentials
 			$o['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
@@ -509,9 +509,15 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		return 'vendor/payu/payu.png';
 	}
 
-	function toCents($decimal): string
+	function toCents(float $decimal): int
 	{
-		return str_replace([',', ' ', '.'], '', trim((string) $decimal));
+		$val = number_format($decimal, 2, '.', '');
+
+		if (preg_match('/^(\d+){1}\.\d{2}$/', $val)) {
+			return ($val * 100);
+		}
+
+		throw new Exception("Invalid decimal value " . $val . ' min. value: 0.01', 422);
 	}
 
 	function log($code, $desc, $oid = 'NONE')
