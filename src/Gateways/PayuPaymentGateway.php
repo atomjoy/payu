@@ -511,13 +511,15 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 
 	function toCents(float $decimal): int
 	{
-		$val = number_format($decimal, 2, '.', '');
-
-		if (preg_match('/^(\d+){1}\.\d{2}$/', $val)) {
-			return ($val * 100);
+		if ($decimal < 0.01) {
+			throw new Exception("Minimal decimal value: 0.01", 422);
 		}
 
-		throw new Exception("Invalid decimal value " . $val . ' min. value: 0.01', 422);
+		if (!preg_match('/^\d+\.\d{1,2}$/', $decimal)) {
+			throw new Exception("Invalid decimal value", 422);
+		}
+
+		return number_format($decimal, 2, '.', '') * 100;
 	}
 
 	function log($code, $desc, $oid = 'NONE')
