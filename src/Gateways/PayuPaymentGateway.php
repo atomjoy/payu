@@ -487,7 +487,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 	function successUrl(Order $order): string
 	{
 		// https://your.page/web/payment/success/{order}
-		return request()->getSchemeAndHttpHost() . '/web/payment/success/payu/' . $order->id;
+		return request()->getSchemeAndHttpHost() . '/web/payment/success/payu/' . $order->id . '?lang=' . app()->getLocale();
 	}
 
 	function ipAddress(): string
