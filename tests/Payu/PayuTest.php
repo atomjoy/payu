@@ -24,7 +24,7 @@ use Payu\Gateways\PayuPaymentGateway;
  */
 class PayuTest extends TestCase
 {
-	// use RefreshDatabase;
+	use RefreshDatabase;
 
 	/** @test */
 	public function sandbox_config()
@@ -76,24 +76,6 @@ class PayuTest extends TestCase
 		}
 
 		$this->assertTrue(true);
-	}
-
-	/** @test */
-	public function notify_success_pages()
-	{
-		if (config('payu.env') == 'sandbox') {
-			// Create demo orders
-			$this->seed(PayuDatabaseSeeder::class);
-
-			$res = $this->postJson('/web/payment/notify/payu', ['status' => 'SUCCESS']);
-			$res->assertStatus(422);
-
-			$o = Order::first();
-			$this->assertNotEmpty($o->id);
-
-			$res = $this->get('/web/payment/success/payu/' . $o->id);
-			$res->assertStatus(200);
-		}
 	}
 
 	/** @test */
@@ -170,5 +152,23 @@ class PayuTest extends TestCase
 
 		$this->assertTrue($g->toCents(123.46) == 12346);
 		$this->assertTrue($g->toCents(123.56) == 12356);
+	}
+
+	/** @test */
+	public function notify_success_pages()
+	{
+		if (config('payu.env', 'sandbox') == 'sandbox') {
+			// Create demo orders
+			$this->seed(PayuDatabaseSeeder::class);
+
+			$res = $this->postJson('/web/payment/notify/payu', ['status' => 'SUCCESS']);
+			$res->assertStatus(422);
+
+			$o = Order::first();
+			$this->assertNotEmpty($o->id);
+
+			$res = $this->get('/web/payment/success/payu/' . $o->id);
+			$res->assertStatus(200);
+		}
 	}
 }
