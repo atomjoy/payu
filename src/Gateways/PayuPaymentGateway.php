@@ -152,7 +152,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		} catch (Exception $e) {
 			PayuPaymentNotCreated::dispatch($order);
 			$this->log('PAYU_PAY_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -160,7 +160,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 	{
 		try {
 			if (!in_array($this->ipAddress(), $this->allowed_ip)) {
-				throw new Exception('Notify invalid ip address');
+				throw new Exception('Notify invalid ip address', 422);
 			}
 
 			// Data
@@ -200,10 +200,10 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 
 			// Invalid notification content
-			throw new Exception("Invalid notification content", 422);
+			throw new Exception("Invalid notification content");
 		} catch (Exception $e) {
 			$this->log('PAYU_NOTIFY_ERR', $e->getMessage());
-			throw new Exception("Not confirmed", 422);
+			return response("Not comfirmed", 422);
 		}
 	}
 
@@ -238,7 +238,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_CONFIRM_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -272,7 +272,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_CANCEL_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -307,7 +307,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_REFUND_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -357,7 +357,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_REFUNDS_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -412,7 +412,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_REFRESH_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -438,7 +438,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_RETRIVE_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -462,7 +462,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			}
 		} catch (Exception $e) {
 			$this->log('PAYU_TRANSACTION_ERR', $e->getMessage(), $order->id);
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
@@ -474,7 +474,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			return $res->getResponse();
 		} catch (Exception $e) {
 			$this->log('PAYU_PAYMENTS_ERR', $e->getMessage());
-			throw new Exception($e->getMessage(), 422);
+			return $e->getMessage();
 		}
 	}
 
