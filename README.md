@@ -90,25 +90,41 @@ public/vendor/payu
 php artisan vendor:publish --tag=payu-public --force
 ```
 
-# Przykłady routes do obsługi płatności (sandbox)
+# Laravel PayU Api
 
-atomjoy/payu/routes/admin.php
+Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeśli chcesz potwierdzać płatności ręcznie dla statusu WAITING_FOR_CONFIRMATION na COMPLETED lub CANCELED.
 
-### Utwórz link do płatności dla zamówienia (sandbox)
+## Utwórz link do płatności dla zamówienia (sandbox)
+
+Numer zamówienia {orders.id} => 1, 2, 3, ...
 
 ```sh
 # Dodaj przykładowe zamówienia
 php artisan db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
 
-# Utwórz link do płatności {order.id} => 1, 2, 3, ...
-https://{your.domain.here}/web/payment/url/payu/{order.id}
+# Utwórz link do płatności
+https://{your.domain.here}/web/payment/url/payu/{orders.id}
+
+# Pobierz dane płatności
+https://{your.domain.here}/web/payment/retrive/payu/{orders.id}
+
+# Aktualizuj dane płatności
+https://{your.domain.here}/web/payment/refresh/payu/{orders.id}
+
+# Przyjmij płatność
+https://{your.domain.here}/web/payment/confirm/payu/{orders.id}
+
+# Odrzuć płatność
+https://{your.domain.here}/web/payment/cancel/payu/{orders.id}
 ```
 
-# Przykłady PayU Api
+## Lista routes do obsługi płatności (sandbox)
 
-Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeśli chcesz potwierdzać płatności ręcznie dla statusu WAITING_FOR_CONFIRMATION na COMPLETED lub CANCELED.
+atomjoy/payu/routes/admin.php
 
-### Utwórz link płatności dla zamówienia
+## Przykłady zastosowania klasy
+
+### Utwórz link płatności dla zamówienia (produkcja)
 
 ```php
 <?php
