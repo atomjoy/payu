@@ -90,9 +90,19 @@ public/vendor/payu
 php artisan vendor:publish --tag=payu-public --force
 ```
 
-## Przykłady routes do obsługi płatności (sandbox)
+# Przykłady routes do obsługi płatności (sandbox)
 
 atomjoy/payu/routes/admin.php
+
+### Utwórz link do płatności dla zamówienia (sandbox)
+
+```sh
+# Dodaj przykładowe zamówienia
+php artisan db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
+
+# Utwórz link do płatności {order.id} => 1, 2, 3, ...
+https://{your.domain.here}/web/payment/url/payu/{order.id}
+```
 
 # Przykłady PayU Api
 
