@@ -122,7 +122,7 @@ https://{your.domain.here}/web/payment/cancel/payu/{orders.id}
 
 atomjoy/payu/routes/admin.php
 
-## Przykłady zastosowania klasy
+# Przykłady Api w Php
 
 ### Utwórz link płatności dla zamówienia (produkcja)
 
