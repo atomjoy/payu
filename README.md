@@ -18,41 +18,6 @@ composer dump-autoload -o
 
 ## Konfiguracja Laravel
 
-### Dodaj klasy modeli
-
-```sh
-php artisan make:model Order
-php artisan make:model Client
-```
-
-### Edytuj Order model aplikacji
-
-```php
-<?php
-namespace App\Models;
-
-use Payu\Models\Order as PaymentOrder;
-
-class Order extends PaymentOrder
-{
-  protected $guarded = [];
-}
-```
-
-### Edytuj Client model aplikacji
-
-```php
-<?php
-namespace App\Models;
-
-use Payu\Models\Client as PaymentClient;
-
-class Client extends PaymentClient
-{
-  protected $guarded = [];
-}
-```
-
 ### Dodaj bazę danych
 
 mysql -u root
@@ -75,16 +40,25 @@ DB_USERNAME=root
 DB_PASSWORD=toor
 ```
 
-### Utwórz tabele
+### Dodaj klasy modeli aplikacji
+
+app/Models
 
 ```sh
+php artisan vendor:publish --tag=payu-models
+```
+
+### Utwórz tabele w bazie danych
+
+```sh
+# Aktualizuj tabelki
 php artisan migrate
 
 # Dodaj przykładowe zamówienia (sandbox, testy)
 php artisan db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
 ```
 
-### Utwórz i edytuj plik konfiguracyjny Payu w Laravel
+### Utwórz i edytuj plik konfiguracyjny Payu Api
 
 config/payu.php
 
@@ -92,12 +66,12 @@ config/payu.php
 php artisan vendor:publish --tag=payu-config
 ```
 
-### Edytuj logo payu (optional)
-
-public/vendor/payu
+### Aktualizacja cache dir linux (if errors)
 
 ```sh
-php artisan vendor:publish --tag=payu-public --force
+sudo mkdir -p storage/framework/cache/payu
+sudo chown -R www-data:www-data storage/framework/cache/payu
+sudo chmod -R 770 storage/framework/cache/payu
 ```
 
 ### Edytuj strony potwierdzeń płatności (optional)
@@ -108,19 +82,23 @@ resources/views/vendor/payu
 php artisan vendor:publish --tag=payu-pages
 ```
 
-### Cache dir (optional)
+### Dodaj folder logo payu (optional)
+
+public/vendor/payu
 
 ```sh
-sudo mkdir -p storage/framework/cache/payu
-sudo chown -R www-data:www-data storage/framework/cache/payu
-sudo chmod -R 770 storage/framework/cache/payu
+php artisan vendor:publish --tag=payu-public --force
 ```
 
-# Przykłady
+# Przyklady routes do obsługi płatności (sandbox mode only)
+
+atomjoy/payu/routes/admin.php
+
+# Przykłady PayU Api
 
 Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeśli chcesz potwierdzać płatności ręcznie dla statusu WAITING_FOR_CONFIRMATION na COMPLETED lub CANCELED.
 
-### Utwóz link płatności dla zamowienia
+### Utwórz link płatności dla zamówienia
 
 ```php
 <?php
@@ -142,7 +120,7 @@ try {
 }
 ```
 
-### Przyjmij płatność (waiting_for_confirmation)
+### Potwierdź płatność (waiting_for_confirmation)
 
 ```php
 <?php
@@ -268,7 +246,7 @@ try {
 }
 ```
 
-## Eventy Payu w Laravel
+## Eventy Payu
 
 ```php
 <?php
@@ -290,9 +268,40 @@ php artisan make:listener PaymentCanceledNotification --event=PayuPaymentCancele
 php artisan make:listener PaymentConfirmedNotification --event=PayuPaymentConfirmed
 ```
 
-## Przyklady routes do obsługi płatności (sandbox, admin panel)
+## Tworzenie klas modeli
 
-atomjoy/payu/routes/admin.php
+```sh
+php artisan make:model Order
+php artisan make:model Client
+```
+
+### Edytuj Order model aplikacji
+
+```php
+<?php
+namespace App\Models;
+
+use Payu\Models\Order as PaymentOrder;
+
+class Order extends PaymentOrder
+{
+  protected $guarded = [];
+}
+```
+
+### Edytuj Client model aplikacji
+
+```php
+<?php
+namespace App\Models;
+
+use Payu\Models\Client as PaymentClient;
+
+class Client extends PaymentClient
+{
+  protected $guarded = [];
+}
+```
 
 ## Pobierz listę zamówień (admin panel)
 
