@@ -94,7 +94,7 @@ php artisan vendor:publish --tag=payu-public --force
 
 Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeśli chcesz potwierdzać płatności ręcznie dla statusu WAITING_FOR_CONFIRMATION na COMPLETED lub CANCELED.
 
-## Utwórz link do płatności dla zamówienia (sandbox)
+### Utwórz link do płatności dla zamówienia (sandbox)
 
 Numer zamówienia {orders.id} => 1, 2, 3, ...
 
@@ -118,7 +118,7 @@ https://{your.domain.here}/web/payment/confirm/payu/{orders.id}
 https://{your.domain.here}/web/payment/cancel/payu/{orders.id}
 ```
 
-## Lista routes do obsługi płatności (sandbox)
+### Lista routes do obsługi płatności (sandbox)
 
 atomjoy/payu/routes/admin.php
 
