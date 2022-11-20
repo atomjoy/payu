@@ -90,7 +90,7 @@ public/vendor/payu
 php artisan vendor:publish --tag=payu-public --force
 ```
 
-# Przyklady routes do obsługi płatności (sandbox mode only)
+## Przykłady routes do obsługi płatności (sandbox)
 
 atomjoy/payu/routes/admin.php
 
