@@ -42,7 +42,7 @@ DB_PASSWORD=toor
 
 ### Dodaj klasy modeli aplikacji
 
-app/Models
+Kopiuj klasy z katalogu app/Models lub dostosuj ręcznie gdy już istnieją w aplikacji.
 
 ```sh
 php artisan vendor:publish --tag=payu-models
