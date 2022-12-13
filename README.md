@@ -58,37 +58,37 @@ class Order extends Model implements PayuOrderInterface
 {
   use HasFactory, SoftDeletes;
 
-	protected $guarded = [];
+  protected $guarded = [];
 
   function order_id()
-	{
-		// return $this->id;
-	}
+  {
+    // return $this->id;
+  }
 
-	function order_cost()
-	{
-		// return $this->cost;
-	}
+  function order_cost()
+  {
+    // return $this->cost;
+  }
 
-	function order_firstname()
-	{
-		// return $this->first_name;
-	}
+  function order_firstname()
+  {
+    // return $this->first_name;
+  }
 
-	function order_lastname()
-	{
-		// return $this->last_name;
-	}
+  function order_lastname()
+  {
+    // return $this->last_name;
+  }
 
-	function order_phone()
-	{
-		// return $this->phone;
-	}
+  function order_phone()
+  {
+    // return $this->phone;
+  }
 
-	function order_email()
-	{
-		// return $this->email;
-	}
+  function order_email()
+  {
+    // return $this->email;
+  }
 }
 ```
 
@@ -143,8 +143,7 @@ Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeś
 Numer zamówienia {orders.id} => 1, 2, 3, ...
 
 ```sh
-# Dodaj przykładowe zamówienia
-php artisan db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
+# Utwórz zamowienie a następnie
 
 # Utwórz link do płatności
 https://{your.domain.here}/web/payment/url/payu/{orders.id}
