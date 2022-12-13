@@ -97,9 +97,6 @@ class Order extends Model implements PayuOrderInterface
 ```sh
 # Aktualizuj tabelki
 php artisan migrate
-
-# Dodaj przykładowe zamówienia (sandbox, testy)
-php artisan db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
 ```
 
 ### Utwórz i edytuj plik konfiguracyjny Payu Api
