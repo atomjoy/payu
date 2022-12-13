@@ -197,7 +197,6 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			// Confirm Order
 			if (!empty($notify->getResponse()->order->extOrderId)) {
 				$p = Payment::where('id', $notify->getResponse()->order->extOrderId)->first();
-				$this->log('PAYU_NOTIFY_REFUND', $p);
 				if ($p instanceof Payment) {
 					$this->refresh(Order::find($p->order_id));
 					return response("Comfirmed", 200);
