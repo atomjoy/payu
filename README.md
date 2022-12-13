@@ -11,7 +11,7 @@ https://developers.payu.com/pl/overview.html#sandbox
 Zainstaluj php composera ze strony https://getcomposer.org/download
 
 ```sh
-composer require atomjoy/payu 1.0.*
+composer require atomjoy/payu 2.0.*
 composer update
 composer dump-autoload -o
 ```
