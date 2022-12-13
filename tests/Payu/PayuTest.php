@@ -4,7 +4,6 @@ namespace Tests\Payu;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Database\Seeders\PayuDatabaseSeeder;
 use App\Models\Order;
 use Tests\TestCase;
 use Payu\Events\PayuPaymentCreated;
@@ -12,19 +11,19 @@ use Payu\Gateways\PayuPaymentGateway;
 
 /**
  * php artisan --env=testing migrate:fresh --seed
- * php artisan --env=testing db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
  *
  * File: phpunit.xml
  * <testsuite name="Payu">
  *	<directory suffix="Test.php">.vendor/atomjoy/payu/tests/Payu</directory>
  * </testsuite>
  *
- * php artisan vendor:publish --tag=payu-tests
  * php artisan test --testsuite=Payu --stop-on-failure
  */
 class PayuTest extends TestCase
 {
-	use RefreshDatabase;
+	// use RefreshDatabase;
+
+	public $order_cost_column = 'cost';
 
 	/** @test */
 	public function sandbox_config()
@@ -47,19 +46,12 @@ class PayuTest extends TestCase
 	public function sandbox_payment_url()
 	{
 		if (config('payu.env') == 'sandbox') {
-			// Create demo orders
-			$this->seed(PayuDatabaseSeeder::class);
 
-			// Get first order
-			// $o = Order::latest()->first();
-			$o = Order::first();
-			$o->delete();
-			$o = Order::first();
-			$this->assertNotEmpty($o->uid);
+			$o = Order::create([
+				$this->order_cost_column => 123.98,
+			]);
 
-			if (!empty($o->client->email)) {
-				$this->assertTrue(true);
-			}
+			$this->assertNotEmpty($o->id);
 
 			// Event
 			Event::fake();
@@ -158,13 +150,14 @@ class PayuTest extends TestCase
 	public function notify_success_pages()
 	{
 		if (config('payu.env', 'sandbox') == 'sandbox') {
-			// Create demo orders
-			$this->seed(PayuDatabaseSeeder::class);
 
 			$res = $this->postJson('/web/payment/notify/payu', ['status' => 'SUCCESS']);
 			$res->assertStatus(422);
 
-			$o = Order::first();
+			$o = Order::create([
+				$this->order_cost_column => 123.22,
+			]);
+
 			$this->assertNotEmpty($o->id);
 
 			$res = $this->get('/web/payment/success/payu/' . $o->id);

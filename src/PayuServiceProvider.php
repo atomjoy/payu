@@ -76,10 +76,6 @@ class PayuServiceProvider extends ServiceProvider
 			$this->publishes([
 				__DIR__ . '/../tests/Payu' => base_path('tests/Payu')
 			], 'payu-tests');
-
-			$this->publishes([
-				__DIR__ . '/../app/Models' => base_path('app/Models')
-			], 'payu-models');
 		}
 	}
 }

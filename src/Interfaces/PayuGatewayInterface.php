@@ -2,7 +2,7 @@
 
 namespace Payu\Interfaces;
 
-use App\Models\Order;
+use Payu\Interfaces\PayuOrderInterface;
 
 interface PayuGatewayInterface
 {
@@ -16,34 +16,34 @@ interface PayuGatewayInterface
 	function notify();
 
 	// Get payment details
-	function retrive(Order $order);
+	function retrive(PayuOrderInterface $order);
 
 	// Get payment transaction details
-	function transaction(Order $order);
+	function transaction(PayuOrderInterface $order);
 
 	// Create payment url
-	function pay(Order $order): string;
+	function pay(PayuOrderInterface $order): string;
 
 	// Confirm payment
-	function confirm(Order $order): string;
+	function confirm(PayuOrderInterface $order): string;
 
 	// Cancel payment
-	function cancel(Order $order): string;
+	function cancel(PayuOrderInterface $order): string;
 
 	// Refresh status
-	function refresh(Order $order): string;
+	function refresh(PayuOrderInterface $order): string;
 
 	// Refund payment
-	function refund(Order $order): string;
+	function refund(PayuOrderInterface $order): string;
 
 	// Payment refund details
-	function refunds(Order $order);
+	function refunds(PayuOrderInterface $order);
 
 	// Payment methods
 	function payments($lang);
 
 	// Redirect to url
-	function successUrl(Order $order): string;
+	function successUrl(PayuOrderInterface $order): string;
 
 	// Notification url
 	function notifyUrl(): string;

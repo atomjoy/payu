@@ -40,12 +40,56 @@ DB_USERNAME=root
 DB_PASSWORD=toor
 ```
 
-### Dodaj klasy modeli aplikacji
+### Klasa modelu Order
 
-Kopiuj klasy z katalogu app/Models lub dostosuj ręcznie gdy już istnieją w aplikacji.
+Dodaj interfejs do klasy zamówień i uzupełnij wymagane metody.
 
-```sh
-php artisan vendor:publish --tag=payu-models
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Payu\Interfaces\PayuOrderInterface;
+
+class Order extends Model implements PayuOrderInterface
+{
+  use HasFactory, SoftDeletes;
+
+	protected $guarded = [];
+
+  function order_id()
+	{
+		// return $this->id;
+	}
+
+	function order_cost()
+	{
+		// return $this->cost;
+	}
+
+	function order_firstname()
+	{
+		// return $this->first_name;
+	}
+
+	function order_lastname()
+	{
+		// return $this->last_name;
+	}
+
+	function order_phone()
+	{
+		// return $this->phone;
+	}
+
+	function order_email()
+	{
+		// return $this->email;
+	}
+}
 ```
 
 ### Utwórz tabele w bazie danych
@@ -74,7 +118,7 @@ sudo chown -R www-data:www-data storage/framework/cache/payu
 sudo chmod -R 770 storage/framework/cache/payu
 ```
 
-### Edytuj strony potwierdzeń płatności (optional)
+### Edytuj strony potwierdzeń płatności (opcjonalnie)
 
 resources/views/vendor/payu
 
@@ -82,7 +126,7 @@ resources/views/vendor/payu
 php artisan vendor:publish --tag=payu-pages
 ```
 
-### Dodaj folder logo payu (optional)
+### Dodaj folder logo payu (opcjonalnie)
 
 public/vendor/payu
 
@@ -297,36 +341,9 @@ php artisan make:listener PaymentConfirmedNotification --event=PayuPaymentConfir
 ## Tworzenie klas modeli
 
 ```sh
-php artisan make:model Order
-php artisan make:model Client
-```
-
-### Edytuj Order model aplikacji
-
-```php
-<?php
-namespace App\Models;
-
-use Payu\Models\Order as PaymentOrder;
-
-class Order extends PaymentOrder
-{
-  protected $guarded = [];
-}
-```
-
-### Edytuj Client model aplikacji
-
-```php
-<?php
-namespace App\Models;
-
-use Payu\Models\Client as PaymentClient;
-
-class Client extends PaymentClient
-{
-  protected $guarded = [];
-}
+php artisan make:model Order -a
+php artisan make:resource OrderResource
+php artisan make:resource OrderCollection
 ```
 
 ## Pobierz listę zamówień (admin panel)

@@ -4,7 +4,6 @@ namespace Payu\Gateways;
 
 use Exception;
 use App\Models\Order;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Payu\Interfaces\PayuGatewayInterface;
 use Payu\Interfaces\PayuGatewayAbstract;
@@ -26,6 +25,7 @@ use OauthCacheFile;
 use OpenPayU_Exception;
 use OpenPayU_Util;
 use OpenPayU;
+use Payu\Interfaces\PayuOrderInterface;
 
 /**
  * PayU payment gateway
@@ -89,22 +89,27 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		}
 	}
 
-	function pay(Order $order): string
+	function pay(PayuOrderInterface $order): string
 	{
 		$payu_url = '';
 
 		try {
+			// Payment
+			$payment = Payment::create([
+				'id' => Str::uuid(),
+				'order_id' => $order->order_id(),
+			]);
+
 			// Client address
-			$client = $order->client;
-			$total = $this->toCents((float) $order->cost);
-			$desc = 'ID-' . $order->uid;
+			$total = $this->toCents((float) $order->order_cost());
+			$desc = 'ID-' . $order->order_id();
 			// Credentials
 			$o['merchantPosId'] = OpenPayU_Configuration::getMerchantPosId();
 			// Urls
 			$o['notifyUrl'] = $this->notifyUrl();
 			$o['continueUrl'] = $this->successUrl($order);
 			// Order uid string
-			$o['extOrderId'] = $order->uid;
+			$o['extOrderId'] = $payment->id;
 			$o['currencyCode'] = $this->currency;
 			$o['customerIp'] = $this->ipAddress();
 			$o['totalAmount'] = $total;
@@ -114,10 +119,10 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			$o['products'][0]['unitPrice'] = $total;
 			$o['products'][0]['quantity'] = 1;
 			// Buyer
-			$o['buyer']['email'] = $client->email;
-			$o['buyer']['phone'] = $client->mobile;
-			$o['buyer']['firstName'] = $client->name;
-			$o['buyer']['lastName'] = $client->lastname ?? $client->name;
+			$o['buyer']['email'] = $order->order_email();
+			$o['buyer']['phone'] = $order->order_phone();
+			$o['buyer']['firstName'] = $order->order_firstname();
+			$o['buyer']['lastName'] = $order->order_lastname();
 			$o['buyer']['language'] = $this->lang();
 
 			// Create payu order
@@ -130,28 +135,30 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 			$payu_uid = $res->getResponse()->orderId ?? null;
 			$payu_url = $res->getResponse()->redirectUri ?? null;
 
-			if (empty($payu_uid) || empty($payu_url) || empty($order->uid)) {
+			if (empty($payu_uid) || empty($payu_url)) {
 				throw new Exception('Invalid payment details');
 			}
 
-			Payment::updateOrCreate([
-				'id' => $payu_uid,
-				'order_uid' => $order->uid
-			], [
+			$a = [
+				'payu_id' => $payu_uid,
 				'url' => $payu_url,
 				'total' => $total,
+				'cost' => $order->order_cost(),
 				'currency' => $this->currency,
 				'ip' => $this->ipAddress(),
 				'gateway' => 'payu'
-			]);
+			];
+
+			$payment->fill($a);
+			$payment->save();
 
 			// Emit event
 			PayuPaymentCreated::dispatch($order);
 
 			return $payu_url;
 		} catch (Exception $e) {
+			$this->log('PAYU_PAY_ERR', $e->getMessage(), $order->order_id());
 			PayuPaymentNotCreated::dispatch($order);
-			$this->log('PAYU_PAY_ERR', $e->getMessage(), $order->id);
 			return $e->getMessage();
 		}
 	}
@@ -189,14 +196,21 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 
 			// Confirm Order
 			if (!empty($notify->getResponse()->order->extOrderId)) {
-				$this->refresh(Order::where('uid', $notify->getResponse()->order->extOrderId)->first());
-				return response("Comfirmed", 200);
+				$p = Payment::where('id', $notify->getResponse()->order->extOrderId)->first();
+				$this->log('PAYU_NOTIFY_REFUND', $p);
+				if ($p instanceof Payment) {
+					$this->refresh(Order::find($p->order_id));
+					return response("Comfirmed", 200);
+				}
 			}
 
 			// Confirm Refund
 			if (!empty($notify->getResponse()->refund) && !empty($notify->getResponse()->extOrderId)) {
-				$this->refunds(Order::where('uid', $notify->getResponse()->extOrderId)->first());
-				return response("Comfirmed", 200);
+				$p = Payment::where('id', $notify->getResponse()->extOrderId)->first();
+				if ($p instanceof Payment) {
+					$this->refunds(Order::find($p->order_id));
+					return response("Comfirmed", 200);
+				}
 			}
 
 			// Invalid notification content
@@ -207,25 +221,22 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		}
 	}
 
-	function confirm(Order $order): string
+	function confirm(PayuOrderInterface $order): string
 	{
 		try {
-			$p = Payment::where(['order_uid' => $order->uid])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
-				if ($p->status != 'WAITING_FOR_CONFIRMATION') {
+				if (!in_array($p->status, ['WAITING_FOR_CONFIRMATION'])) {
 					throw new Exception('You can not update payment with this status');
 				}
 
 				$res = OpenPayU_Order::statusUpdate([
-					"orderId" => $p->id,
+					"orderId" => $p->payu_id,
 					"orderStatus" => 'COMPLETED'
 				]);
 
 				if ($res->getStatus() == 'SUCCESS') {
-					// Refresh shop payment
-					// $this->refresh($order);
-
 					// Emit event
 					PayuPaymentConfirmed::dispatch($order);
 
@@ -237,28 +248,25 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_CONFIRM_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_CONFIRM_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function cancel(Order $order): string
+	function cancel(PayuOrderInterface $order): string
 	{
 		try {
-			$p = Payment::where(['order_uid' => $order->uid])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
-				if ($p->status != 'WAITING_FOR_CONFIRMATION') {
+				if (!in_array($p->status, ['WAITING_FOR_CONFIRMATION'])) {
 					throw new Exception('You can not update payment with this status');
 				}
 
-				$res = OpenPayU_Order::cancel($p->id);
+				$res = OpenPayU_Order::cancel($p->payu_id);
 
 				if ($res->getStatus() == 'SUCCESS') {
 					if (!empty($res->getResponse()->orderId)) {
-						// Refresh shop payment
-						// $this->refresh($order);
-
 						// Emit event
 						PayuPaymentCanceled::dispatch($order);
 
@@ -271,21 +279,19 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id or status');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_CANCEL_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_CANCEL_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function refund(Order $order): string
+	function refund(PayuOrderInterface $order): string
 	{
 		try {
-			$p = Payment::where([
-				'order_uid' => $order->uid
-			])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
 				// Refund full order
-				$res = OpenPayU_Refund::create($p->id, __('Refunding'), null);
+				$res = OpenPayU_Refund::create($p->payu_id, __('Refunding'), null);
 
 				if ($res->getStatus() == 'SUCCESS') {
 					if ($res->getResponse()->refund->status == 'PENDING') {
@@ -306,21 +312,19 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_REFUND_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_REFUND_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function refunds(Order $order)
+	function refunds(PayuOrderInterface $order)
 	{
 		try {
-			$p = Payment::where([
-				'order_uid' => $order->uid
-			])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
 				// Get refunds from payu
-				$res = OpenPayU_Refunds::retrive($p->id);
+				$res = OpenPayU_Refunds::retrive($p->payu_id);
 
 				if (
 					$res instanceof OpenPayU_Result ||
@@ -356,21 +360,19 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid refund id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_REFUNDS_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_REFUNDS_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function refresh(Order $order): string
+	function refresh(PayuOrderInterface $order): string
 	{
 		try {
-			$p = Payment::where([
-				'order_uid' => $order->uid
-			])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
 				// Get payment from payu
-				$res = OpenPayU_Order::retrieve($p->id);
+				$res = OpenPayU_Order::retrieve($p->payu_id);
 
 				if (
 					$res instanceof OpenPayU_Result ||
@@ -411,20 +413,18 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_REFRESH_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_REFRESH_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function retrive(Order $order)
+	function retrive(PayuOrderInterface $order)
 	{
 		try {
-			$p = Payment::where([
-				'order_uid' => $order->uid
-			])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
-				$res = OpenPayU_Order::retrieve($p->id);
+				$res = OpenPayU_Order::retrieve($p->payu_id);
 
 				if ($res->getStatus() == 'SUCCESS') {
 					if (count($res->getResponse()->orders) == 0) {
@@ -437,20 +437,18 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_RETRIVE_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_RETRIVE_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
 
-	function transaction(Order $order)
+	function transaction(PayuOrderInterface $order)
 	{
 		try {
-			$p = Payment::where([
-				'order_uid' => $order->uid
-			])->first();
+			$p = Payment::where(['order_id' => $order->order_id()])->latest()->first();
 
 			if ($p instanceof Payment) {
-				$res = OpenPayU_Order::retrieveTransaction($p->id);
+				$res = OpenPayU_Order::retrieveTransaction($p->payu_id);
 
 				if (count($res->getResponse()->transactions) == 0) {
 					throw new Exception("Empty transactions array");
@@ -461,7 +459,7 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 				throw new Exception('Invalid payment id');
 			}
 		} catch (Exception $e) {
-			$this->log('PAYU_TRANSACTION_ERR', $e->getMessage(), $order->id);
+			$this->log('PAYU_TRANSACTION_ERR', $e->getMessage(), $order->order_id());
 			return $e->getMessage();
 		}
 	}
@@ -484,10 +482,10 @@ class PayuPaymentGateway extends PayuGatewayAbstract implements PayuGatewayInter
 		return request()->getSchemeAndHttpHost() . '/web/payment/notify/payu';
 	}
 
-	function successUrl(Order $order): string
+	function successUrl(PayuOrderInterface $order): string
 	{
 		// https://your.page/web/payment/success/{order}
-		return request()->getSchemeAndHttpHost() . '/web/payment/success/payu/' . $order->id . '?lang=' . app()->getLocale();
+		return request()->getSchemeAndHttpHost() . '/web/payment/success/payu/' . $order->order_id() . '?lang=' . app()->getLocale();
 	}
 
 	function ipAddress(): string

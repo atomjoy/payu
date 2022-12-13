@@ -5,9 +5,9 @@ namespace Payu\Models\Traits;
 use Illuminate\Support\Str;
 
 /**
- * Add in model class
+ * Change if you need
  *
- * protected $primaryKey = 'uid';
+ * protected $primaryKey = 'id';
  */
 trait Uuids
 {

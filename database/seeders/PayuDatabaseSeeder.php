@@ -16,7 +16,6 @@ class PayuDatabaseSeeder extends Seeder
 		// \App\Models\User::factory(30)->create();
 
 		$this->call([
-			PayuOrderSeeder::class,
 			PayuLogSeeder::class,
 		]);
 	}
