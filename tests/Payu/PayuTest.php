@@ -47,7 +47,13 @@ class PayuTest extends TestCase
 	{
 		if (config('payu.env') == 'sandbox') {
 
-			$o = Order::factory()->create([
+			$o = Order::create([
+				'firstname' => 'Kill',
+				'lastname' => 'Bill',
+				'phone' => '+48000000000',
+				'email' => 'user@localhost',
+				'payment_method' => 'online',
+				'payment_gateway' => 'payu',
 				$this->order_cost_column => 123.98,
 			]);
 
@@ -154,7 +160,13 @@ class PayuTest extends TestCase
 			$res = $this->postJson('/web/payment/notify/payu', ['status' => 'SUCCESS']);
 			$res->assertStatus(422);
 
-			$o = Order::factory()->create([
+			$o = Order::create([
+				'firstname' => 'Kill',
+				'lastname' => 'Bill',
+				'phone' => '+48000000000',
+				'email' => 'user@localhost',
+				'payment_method' => 'online',
+				'payment_gateway' => 'payu',
 				$this->order_cost_column => 123.98,
 			]);
 
