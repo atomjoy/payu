@@ -40,6 +40,48 @@ DB_USERNAME=root
 DB_PASSWORD=toor
 ```
 
+### Utwórz model Order
+
+```sh
+php artisan make:model Order -a
+```
+
+### Dodaj columny w tabeli
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+	public function up()
+	{
+		Schema::create('orders', function (Blueprint $table) {
+			$table->id();
+			$table->decimal('cost', 15, 2)->nullable()->default(0.00);
+			$table->enum('payment_method', ['money', 'card', 'online'])->nullable()->default('money');
+			$table->enum('payment_gateway', ['payu'])->nullable(true);
+			$table->string('firstname');
+			$table->string('lastname');
+			$table->string('phone');
+			$table->string('email');
+			$table->timestamps();
+			$table->softDeletes();
+			$table->unsignedBigInteger('user_id')->nullable(true);
+			$table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+		});
+	}
+
+	public function down()
+	{
+		Schema::dropIfExists('orders');
+	}
+};
+```
+
 ### Klasa modelu Order
 
 Dodaj interfejs do klasy zamówień i uzupełnij wymagane metody.
@@ -74,32 +116,32 @@ class Order extends Model implements PayuOrderInterface
   // Wymagane metody poniżej
   function order_id()
   {
-    // return $this->id;
+    return $this->id;
   }
 
   function order_cost()
   {
-    // return $this->cost;
+    return $this->cost;
   }
 
   function order_firstname()
   {
-    // return $this->first_name;
+    return $this->firstname;
   }
 
   function order_lastname()
   {
-    // return $this->last_name;
+    return $this->lastname;
   }
 
   function order_phone()
   {
-    // return $this->phone;
+    return $this->phone;
   }
 
   function order_email()
   {
-    // return $this->email;
+    return $this->email;
   }
 }
 ```
@@ -109,6 +151,7 @@ class Order extends Model implements PayuOrderInterface
 ```sh
 # Aktualizuj tabelki
 php artisan migrate
+php artisan migrate --env=testing
 ```
 
 ### Utwórz i edytuj plik konfiguracyjny Payu Api
