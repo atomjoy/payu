@@ -185,6 +185,22 @@ public/vendor/payu
 php artisan vendor:publish --tag=payu-public --force
 ```
 
+## Testuj
+
+### Dodaj w phpunit.xml
+
+```xml
+<testsuite name="Payu">
+	<directory suffix="Test.php">./vendor/atomjoy/payu/tests/Payu</directory>
+</testsuite>
+```
+
+### Tests only with config(['payu.env' => 'sandbox'])
+
+```sh
+php artisan test --testsuite=Payu --stop-on-failure
+```
+
 # Laravel PayU Api
 
 Wyłączyć w panelu administracyjnym PayU automatyczny odbiór płatności jeśli chcesz potwierdzać płatności ręcznie dla statusu WAITING_FOR_CONFIRMATION na COMPLETED lub CANCELED.
