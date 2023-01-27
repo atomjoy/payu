@@ -47,7 +47,7 @@ class PayuTest extends TestCase
 	{
 		if (config('payu.env') == 'sandbox') {
 
-			$o = Order::create([
+			$o = Order::factory()->create([
 				$this->order_cost_column => 123.98,
 			]);
 
@@ -63,7 +63,7 @@ class PayuTest extends TestCase
 
 			// Test event
 			Event::assertDispatched(PayuPaymentCreated::class, function ($event) use ($o) {
-				return $event->order->uid === $o->uid;
+				return $event->order->id === $o->id;
 			});
 		}
 
@@ -154,8 +154,8 @@ class PayuTest extends TestCase
 			$res = $this->postJson('/web/payment/notify/payu', ['status' => 'SUCCESS']);
 			$res->assertStatus(422);
 
-			$o = Order::create([
-				$this->order_cost_column => 123.22,
+			$o = Order::factory()->create([
+				$this->order_cost_column => 123.98,
 			]);
 
 			$this->assertNotEmpty($o->id);
