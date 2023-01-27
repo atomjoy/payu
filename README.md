@@ -46,7 +46,7 @@ DB_PASSWORD=toor
 php artisan make:model Order -a
 ```
 
-### Dodaj columny w tabeli
+### Dodaj kolumny w tabeli
 
 ```php
 <?php
