@@ -5,6 +5,7 @@ namespace Payu;
 use Illuminate\Support\ServiceProvider;
 use Payu\Gateways\PayuPaymentGateway;
 use Payu\Http\Middleware\PayuMiddleware;
+use Payu\Providers\PayuEventServiceProvider;
 use Payu\Payu;
 
 class PayuServiceProvider extends ServiceProvider
@@ -16,24 +17,26 @@ class PayuServiceProvider extends ServiceProvider
 	 */
 	public function register()
 	{
-		$this->app['router']->aliasMiddleware('payu', PayuMiddleware::class);
-
 		$this->mergeConfigFrom(__DIR__ . '/../config/config.php', 'payu');
-
-		// Facade
-		$this->app->bind('payu', function ($app) {
-			return new Payu();
-		});
 
 		// Enable payu gateway
 		if (config('payu.enable') == true) {
+			// Middleware
+			$this->app['router']->aliasMiddleware('payu', PayuMiddleware::class);
+			// Facade
+			$this->app->bind('payu', function ($app) {
+				return new Payu();
+			});
+			// Service
 			$this->app->bind(PayuPaymentGateway::class, function ($app) {
 				return new PayuPaymentGateway();
 			});
+			// Events
+			if (config('payu.env') == 'sandbox') {
+				// Event service
+				$this->app->register(PayuEventServiceProvider::class);
+			}
 		}
-
-		// Event service
-		// $this->app->register(PayuEventServiceProvider::class);
 	}
 
 	/**

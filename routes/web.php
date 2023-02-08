@@ -20,4 +20,4 @@ Route::prefix('/web')->name('web.')->middleware(['web', 'payu'])->group(function
 });
 
 // Private routes
-require('admin.php');
+require('sandbox.php');

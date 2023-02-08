@@ -4,10 +4,10 @@ namespace Payu\Interfaces;
 
 interface PayuOrderInterface
 {
-	function order_id();
-	function order_cost();
-	function order_firstname();
-	function order_lastname();
-	function order_phone();
-	function order_email();
+	function orderId();
+	function orderCost();
+	function orderFirstname();
+	function orderLastname();
+	function orderPhone();
+	function orderEmail();
 }

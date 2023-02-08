@@ -1,6 +1,79 @@
-# Testing, dev
+# Test
 
-### Update migrations
+## Database and user
+
+mysql -u root
+
+```sql
+CREATE DATABASE IF NOT EXISTS laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON laravel_testing.* TO testing@localhost IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON laravel_testing.* TO testing@127.0.0.1 IDENTIFIED BY 'toor' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+# Clear or change password
+SET PASSWORD FOR root@localhost=PASSWORD('');
+
+# Change password
+ALTER USER 'testing'@'localhost' IDENTIFIED BY 'toor';
+FLUSH PRIVILEGES;
+```
+
+### Config .env.testing
+
+```php
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_testing
+DB_USERNAME=testing
+DB_PASSWORD=toor
+```
+
+### Migration, seed
+
+```sh
+# Migracja i populacja tabel
+php artisan --env=testing migrate
+php artisan --env=testing migrate:fresh
+
+# Tylko populacja tabel (przykład)
+php artisan --env=testing db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
+
+# Lub dodaj w katalogu databases/seeders/DatabaseSeeder.php aplikacji (przykład)
+$this->call([
+  PayuDatabaseSeeder::class,
+]);
+```
+
+### Settings phpunit.xml
+
+```xml
+<testsuite name="Payu">
+  <directory suffix="Test.php">./vendor/atomjoy/payu/tests/Payu</directory>
+</testsuite>
+
+<!-- optional -->
+<env name="APP_ENV" value="testing" force="true"/>
+<env name="APP_DEBUG" value="true" force="true"/>
+```
+
+### Dirs
+
+```sh
+sudo chown -R www-data:www-data storage/framework/cache
+sudo chmod -R 770 storage/framework/cache
+```
+
+### Run tests
+
+```sh
+# Tests only for config(['payu.env' => 'sandbox'])
+php artisan test --testsuite=Payu --stop-on-failure
+```
+
+## Table update (examples)
+
+### Make migration
 
 ```sh
 php artisan make:migration UpdatePayuTables
@@ -17,44 +90,44 @@ use Illuminate\Support\Facades\Schema;
 
 class UpdatePayuTables extends Migration
 {
-	public function up()
-	{
-		Schema::table('orders', function (Blueprint $table) {
-			// Columns
-			if (!Schema::hasColumn('orders', 'user_id')) {
-				$table->unsignedBigInteger('user_id')->nullable(true)->after('uid');
-			}
+  public function up()
+  {
+    Schema::table('orders', function (Blueprint $table) {
+      // Columns
+      if (!Schema::hasColumn('orders', 'user_id')) {
+        $table->unsignedBigInteger('user_id')->nullable(true)->after('uid');
+      }
 
-			// Indexes
-			$table->index('user_id');
-			$table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-		});
+      // Indexes
+      $table->index('user_id');
+      $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+    });
 
-		Schema::table('clients', function (Blueprint $table) {
-			$table->string('zip', 10)->nullable(true)->after('country');
-		});
-	}
+    Schema::table('clients', function (Blueprint $table) {
+      $table->string('zip', 10)->nullable(true)->after('country');
+    });
+  }
 
-	public function down()
-	{
-		Schema::table('orders', function (Blueprint $table) {
-			// Indexes
-			$table->dropForeign('orders_user_id_foreign');
-			$table->dropIndex('orders_user_id_index');
+  public function down()
+  {
+    Schema::table('orders', function (Blueprint $table) {
+      // Indexes
+      $table->dropForeign('orders_user_id_foreign');
+      $table->dropIndex('orders_user_id_index');
 
-			// Drop columns
-			$table->dropColumn([
-				'user_id'
-			]);
-		});
+      // Drop columns
+      $table->dropColumn([
+        'user_id'
+      ]);
+    });
 
-		Schema::table('clients', function (Blueprint $table) {
-			// Drop columns
-			$table->dropColumn([
-				'zip'
-			]);
-		});
-	}
+    Schema::table('clients', function (Blueprint $table) {
+      // Drop columns
+      $table->dropColumn([
+        'zip'
+      ]);
+    });
+  }
 }
 ```
 
@@ -62,6 +135,7 @@ class UpdatePayuTables extends Migration
 
 ```sh
 php artisan migrate
+php artisan migrate:fresh
 ```
 
 ### Update model sample
@@ -114,102 +188,21 @@ php artisan session:table
 php artisan queue:table
 ```
 
-## Tests
-
-### Database and user
-
-mysql -u root
-
-```sql
-# Create database
-CREATE DATABASE IF NOT EXISTS laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# Privileges and user with pass
-GRANT ALL PRIVILEGES ON laravel_testing.* TO testing@localhost IDENTIFIED BY 'toor' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON laravel_testing.* TO testing@127.0.0.1 IDENTIFIED BY 'toor' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-
-# Change password
-ALTER USER 'testing'@'localhost' IDENTIFIED BY 'toor';
-FLUSH PRIVILEGES;
-```
-
-### Config .env.testing
-
-```php
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=laravel_testing
-DB_USERNAME=testing
-DB_PASSWORD=toor
-```
-
-### Migration, seed
-
-```sh
-# Migracja i populacja tabel
-php artisan --env=testing migrate:fresh
-# Tylko populacja tabel
-php artisan --env=testing db:seed --class="\Database\Seeders\PayuDatabaseSeeder"
-
-# Lub dodaj w katalogu databases/seeders/DatabaseSeeder.php aplikacji
-$this->call([
-  PayuDatabaseSeeder::class,
-]);
-
-# migracje i seeders
-php artisan --env=testing migrate:fresh --seed
-```
-
-### Settings phpunit.xml
-
-```xml
-<testsuite name="Payu">
-	<directory suffix="Test.php">./vendor/atomjoy/payu/tests/Payu</directory>
-</testsuite>
-
-<!-- optional -->
-<env name="APP_ENV" value="testing" force="true"/>
-<env name="APP_DEBUG" value="true" force="true"/>
-```
-
-### Dirs
-
-```sh
-sudo chown -R www-data:www-data storage/framework/cache
-sudo chmod -R 770 storage/framework/cache
-```
-
-### Run tests
-
-```sh
-# Tests only for config(['payu.env' => 'sandbox'])
-php artisan test --testsuite=Payu --stop-on-failure
-```
-
-### Copy tests
-
-```sh
-# Copy package test/Pay dir
-php artisan vendor:publish --tag=payu-tests --force
-```
-
 ## Composer
 
 ### Local directory
 
 ```json
 {
-	"repositories": [
-		{
-			"type": "path",
-			"url": "packages/atomjoy/payu"
-		}
-	],
-	"require": {
-		"atomjoy/payu": "dev-main"
-	}
+  "repositories": [
+    {
+      "type": "path",
+      "url": "packages/atomjoy/payu"
+    }
+  ],
+  "require": {
+    "atomjoy/payu": "dev-main"
+  }
 }
 ```
 
@@ -217,15 +210,15 @@ php artisan vendor:publish --tag=payu-tests --force
 
 ```json
 {
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "https://github.com/atomjoy/payu"
-		}
-	],
-	"require": {
-		"atomjoy/payu": "*"
-	}
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/atomjoy/payu"
+    }
+  ],
+  "require": {
+    "atomjoy/payu": "*"
+  }
 }
 ```
 
@@ -237,12 +230,12 @@ composer require atomjoy/payu "~1.0.0"
 
 # composer.json
 {
-	"require": {
-		"atomjoy/payu": "~1.0.0"
-	}
+  "require": {
+    "atomjoy/payu": "~1.0.0"
+  }
 }
 ```
 
 ## Payment APIs
 
-https://github.com/PayU-EMEA/openpayu_php
+<https://github.com/PayU-EMEA/openpayu_php>

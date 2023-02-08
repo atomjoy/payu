@@ -2,6 +2,7 @@
 
 namespace Payu;
 
+use Exception;
 use Payu\Gateways\PayuPaymentGateway;
 use Payu\Interfaces\PayuOrderInterface;
 

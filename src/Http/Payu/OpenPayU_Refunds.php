@@ -18,12 +18,10 @@ class OpenPayU_Refunds extends OpenPayU_Refund
 
 		try {
 			$authType = self::getAuth();
+			$pathUrl = OpenPayU_Configuration::getServiceUrl() . 'orders/' . $orderId . '/refunds';
+			return self::verifyResponse(OpenPayU_Http::doGet($pathUrl, $authType));
 		} catch (OpenPayU_Exception $e) {
 			throw new OpenPayU_Exception($e->getMessage(), $e->getCode());
 		}
-
-		$pathUrl = OpenPayU_Configuration::getServiceUrl() . 'orders/' . $orderId . '/refunds';
-
-		return self::verifyResponse(OpenPayU_Http::doGet($pathUrl, $authType));
 	}
 }

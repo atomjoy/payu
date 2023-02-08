@@ -161,8 +161,8 @@ class PayuTest extends TestCase
 			$res->assertStatus(422);
 
 			$o = Order::create([
-				'firstname' => 'Kill',
-				'lastname' => 'Bill',
+				'firstname' => 'Mary',
+				'lastname' => 'Jane',
 				'phone' => '+48000000000',
 				'email' => 'user@localhost',
 				'payment_method' => 'online',
