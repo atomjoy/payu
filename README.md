@@ -447,3 +447,7 @@ Route::get('/orders', function () {
   }])->orderBy('created_at', 'desc')->get();
 });
 ```
+
+## LICENSE
+
+This project is licensed under the terms of the GNU GPLv3 license.
